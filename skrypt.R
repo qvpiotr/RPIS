@@ -1,0 +1,288 @@
+install.packages('ggplot2')
+install.packages('rstudioapi')
+install.packages('gridExtra')
+install.packages('grid')
+install.packages('plyr')
+install.packages('GGally')
+install.packages('plotly')
+install.packages('e1071')
+
+
+library(ggplot2)
+library(rstudioapi)
+library(gridExtra)
+library(grid)
+library(plyr)
+library(GGally)
+library(plotly)
+library(e1071)
+
+
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+data <- read.csv(file = "Iris.csv", sep=",")
+
+View(data)
+names(data)
+dim(data)
+
+#check for null 
+anyNA(data)
+
+#new csv file
+write.csv(database,'iris_data.csv')
+
+# -------------------------------------------------
+
+#pie chart of species
+spieces<-data.frame(table(data$Species))
+colnames(spieces)<-c("Spieces","count")
+spieces
+
+pie_chart <- plot_ly (spieces ,labels= spieces$Spieces ,values= spieces$count ,type="pie", title = 'Spieces')
+pie_chart
+
+
+#summary of the iris data
+summary(data)
+
+
+#basis analysis
+
+#Sepal length 
+
+summary(data$SepalLength)
+#odchylenie stand
+sd(data$SepalLength)
+#rozstep
+range(data$SepalLength)
+#rozstep kwartylowy
+IQR(data$SepalLength)
+#skosnosc
+skewness(data$SepalLength)
+
+moment(data$SepalLength,0.25)
+moment(data$SepalLength,0.5)
+moment(data$SepalLength,0.75)
+moment(data$SepalLength,1)
+
+
+#Sepal width
+
+summary(data$SepalWidth)
+sd(data$SepalWidth)
+range(data$SepalWidth)
+IQR(data$SepalWidth)
+skewness(data$SepalWidth)
+
+moment(data$SepalWidth,0.25)
+moment(data$SepalWidth,0.5)
+moment(data$SepalWidth,0.75)
+moment(data$SepalWidth,1)
+
+
+#Petal length
+
+summary(data$PetalLength)
+sd(data$PetalLength)
+range(data$PetalLength)
+IQR(data$PetalLength)
+skewness(data$PetalLength)
+
+moment(data$PetalLength,0.25)
+moment(data$PetalLength,0.5)
+moment(data$PetalLength,0.75)
+moment(data$PetalLength,1)
+
+#Petal width
+
+summary(data$PetalWidth)
+sd(data$PetalWidth)
+range(data$PetalWidth)
+IQR(data$PetalWidth)
+skewness(data$PetalWidth)
+
+moment(data$PetalWidth,0.25)
+moment(data$PetalWidth,0.5)
+moment(data$PetalWidth,0.75)
+moment(data$PetalWidth,1)
+
+
+
+#analysis with the Histogram
+
+#Sepal length 
+ggplot(data, aes(x=SepalLengthCm, fill=factor(Species)))+
+  geom_bar()+ 
+  scale_fill_discrete(name="Species")
+
+
+
+#Sepal width
+ggplot(data, aes(x=SepalWidthCm, fill=factor(Species)))+
+  geom_bar()+ 
+  scale_fill_discrete(name="Species")
+
+
+
+#Petal length
+ggplot(data, aes(x=PetalLengthCm, fill=factor(Species)))+
+  geom_bar()+ 
+  scale_fill_discrete(name="Species")
+
+
+
+#Petal width
+ggplot(data, aes(x=PetalWidthCm, fill=factor(Species)))+
+  geom_bar()+ 
+  scale_fill_discrete(name="Species")
+
+
+
+#analysis with the density histogram
+
+#Sepal length 
+DhistSl <- ggplot(data, aes(x=SepalLengthCm, colour=Species, fill=Species)) +
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=mean(SepalLengthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
+  xlab("Sepal Length") +  
+  ylab("Density")
+DhistSl
+
+#Sepal width 
+DhistSw <- ggplot(data, aes(x=SepalWidthCm, colour=Species, fill=Species)) +
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=mean(SepalWidthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
+  xlab("Sepal Width") +  
+  ylab("Density") 
+DhistSw
+
+#Petal Length
+DhistPl <- ggplot(data, aes(x=PetalLengthCm, colour=Species, fill=Species)) +
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=mean(PetalLengthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
+  xlab("Petal Length") +  
+  ylab("Density") 
+DhistPl
+
+#Petal Width
+DhistPw <- ggplot(data, aes(x=PetalWidthCm, colour=Species, fill=Species)) +
+  geom_density(alpha=.3) +
+  geom_vline(aes(xintercept=mean(PetalWidthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
+  xlab("Petal Width") +  
+  ylab("Density") 
+DhistPw
+
+#the density plot may help see the separation of classes
+
+
+#analysis with boxplot to identify outliers
+
+#Sepal length 
+ggplot(data, aes(Species, SepalLengthCm, fill=Species)) + 
+  geom_boxplot()+
+  scale_y_continuous("Sepal Length)", breaks= seq(0,30, by=.5))+
+  labs(title = "Sepal Length", x = "Species")
+
+#Sepal width 
+ggplot(data, aes(Species, SepalWidthCm, fill=Species)) + 
+  geom_boxplot()+
+  scale_y_continuous("Sepal Width)", breaks= seq(0,30, by=.5))+
+  labs(title = "Sepal Width", x = "Species")
+
+#Petal Length 
+ggplot(data, aes(Species, PetalLengthCm, fill=Species)) + 
+  geom_boxplot()+
+  scale_y_continuous("Petal Length)", breaks= seq(0,30, by=.5))+
+  labs(title = "Petal Length", x = "Species")
+
+#Petal Width 
+ggplot(data, aes(Species, PetalWidthCm, fill=Species)) + 
+  geom_boxplot()+
+  scale_y_continuous("Petal Width)", breaks= seq(0,30, by=.5))+
+  labs(title = "Petal Width", x = "Species")
+
+
+#some classes don't overlap (Petal Width and Petal Length)
+#Sepal Width and Sepal Length overlap
+
+
+#check distributions
+
+#dataset is not so huge so Shapiro-Wilk test is quite good
+
+#Sepal length 
+kurtosis(data$SepalLengthCm)
+#kurtosis is negative, trait values are less concentrated than with normal distribution
+
+shapiro.test(data$SepalLengthCm)
+#p-value = 0.01018
+
+
+#Sepal width
+kurtosis(data$SepalWidthCm)
+#0.1983681
+#kurtosis is positive, trait values more concentrated than with normal distribution
+
+shapiro.test(data$SepalWidthCm)
+#p-value = 0.07518 > 0.05
+# a distribution similar to normal
+
+#Petal Length
+kurtosis(data$PetalLengthCm)
+#kurtosis is negative, trait values are less concentrated than with normal distribution
+
+shapiro.test(data$PetalLengthCm)
+#p-value = 7.545e-10
+
+#Petal Width 
+kurtosis(data$PetalWidthCm)
+#kurtosis is negative, trait values are less concentrated than with normal distribution
+
+shapiro.test(data$PetalWidthCm)
+#p-value = 1.865e-08
+
+
+#correlation plot to show correlation dependencies
+
+ggpairs(data = data,
+        title = "Correlation Plot",
+        upper = list(continuous = wrap("cor", size = 5)), 
+        lower = list(continuous = "smooth")
+)
+
+#we also see the same result use cor()
+cor(data[, 2:5])
+
+#There is strong correlation between Petal Width and Petal Length - 96%
+ggplot(data, aes(x=PetalWidthCm, y=PetalLengthCm))+
+  geom_point(aes(colour=Species))+
+  geom_smooth(method='lm')+
+  ggtitle("Correlation between Petal Length and Petal Width")
+
+
+#Correlation between Sepal Length and Petal Length is also strong - 87%
+ggplot(data, aes(x=SepalLengthCm, y=PetalLengthCm))+
+  geom_point(aes(colour=Species))+
+  geom_smooth(method='lm')+
+  ggtitle("Correlation between Petal Length and Sepal Length")
+
+
+#Correlation between Sepal Length and Petal Width - 82%
+ggplot(data, aes(x=SepalLengthCm, y=PetalWidthCm))+
+  geom_point(aes(colour=Species))+
+  geom_smooth(method='lm')+
+  ggtitle("Correlation between Petal Width and Sepal Length")
+
+
+#Correlation between Sepal Length and Sepal Width is (-0,1) 
+#so it means when the one value increase another one decrease
+#let's see this 
+
+ggplot(data, aes(x=SepalWidthCm, y=SepalLengthCm))+
+  geom_point(aes(colour=Species))+
+  geom_smooth(method='lm')+
+  ggtitle("Correlation between Sepal Length and Sepal Width")
+
+
+

@@ -1,0 +1,762 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+
+\title{Analiza zestawu pomiarów kwiatów Irysa}
+  \author{\textbf{304358, Piotr WITEK}, czwartek $16^{15}$\\ 
+\textit{AGH, Wydział Informatyki Elektroniki i Telekomunikacji}\\
+\textit{Rachunek prawdopodobieństwa i statystyka 2020/2021}}
+\date{Kraków, \today}
+
+
+\usepackage{Sweave}
+\begin{document}
+\input{raport-concordance}
+\maketitle
+
+\textit{Ja, niżej podpisany(na) własnoręcznym podpisem deklaruję, że przygotowałem(łam) przedstawiony do oceny projekt samodzielnie i żadna jego część nie jest kopią pracy innej osoby.}
+\begin{flushright}
+{Piotr Witek}
+\end{flushright}
+
+\section{Streszczenie raportu}
+
+ \qquad W ramach projektu na przedmiot Rachunek Prawdopodobieństwa i Statystyka dokonałem analizy danych na podstawie zestawu zawierającego pomiary kwiatów Irysa. Zestaw danych jest stosunkowo niewielki, zawiera 150 pomiarów, 3 rodzajów Irysów.
+
+\vspace{0.2cm}
+
+Korzystając z pakietu R wykonałem podstawową analizę danych. Badałem 4 cechy: Sepal Length, Sepal Width, Petal Length oraz Petal Width. Dokonałem analizy rodzaju rozkładu badanych danych wykorzystując test Shapiro-Wilka. Na podstawie wyników testu, wnioskuję, że rozkład cechy Sepal Width jest zbliżony do rozkładu normalnego. Operacje na pozostałych zmiennych wykluczyły podobieństwo do rozkładu normalnego.
+
+\vspace{0.2cm}
+
+Interesujące stało się badanie korelacji pomiędzy zmiennymi. Korzystając z operacji, które udostępnia środowisko do obliczeń statystycznych stworzyłem macierz korelacji, z której odczytałem, jakie zmienne korelują z innymi. Stworzyłem serię wykresów obrazujących te zależności z użyciem regresji, opisując jaka zmienna zależy od innej i w jakim stopniu.
+
+\vspace{0.2cm}
+
+Aby podkreślić czytelność i przejrzystość wykonywanej analizy, korzystałem z wielu tabel i wykresów.
+
+\vspace{0.2cm}
+
+Badany przeze mnie zestaw danych jest często wykorzystywany do nauki Machine Learningu, ze względu na przejrzystość danych, stosunkowo niewielką liczbę zmiennych, oraz ciekawe zależności między zmiennymi.
+
+
+\section{Opis danych}
+
+Dataset 'Iris spiecies' pochodzi ze strony \url{https://www.kaggle.com/uciml/iris} . Ten zbiór danych został opisany w 1936 roku i zawiera zmierzone wartości parametrów kwiatów trzech gatunków Irysów: Iris Setosa, Iris Versicolour i Iris Virginica.
+
+
+\vspace{0.2cm}
+Nazwy parametrów:
+
+\begin{Schunk}
+\begin{Sinput}
+> names(data)
+\end{Sinput}
+\begin{Soutput}
+[1] "Id"            "SepalLengthCm" "SepalWidthCm"  "PetalLengthCm"
+[5] "PetalWidthCm"  "Species"      
+\end{Soutput}
+\end{Schunk}
+
+
+Podsumowanie datasetu:
+
+\begin{Schunk}
+\begin{Sinput}
+> summary(data)
+\end{Sinput}
+\begin{Soutput}
+       Id         SepalLengthCm    SepalWidthCm   PetalLengthCm  
+ Min.   :  1.00   Min.   :4.300   Min.   :2.000   Min.   :1.000  
+ 1st Qu.: 38.25   1st Qu.:5.100   1st Qu.:2.800   1st Qu.:1.600  
+ Median : 75.50   Median :5.800   Median :3.000   Median :4.350  
+ Mean   : 75.50   Mean   :5.843   Mean   :3.054   Mean   :3.759  
+ 3rd Qu.:112.75   3rd Qu.:6.400   3rd Qu.:3.300   3rd Qu.:5.100  
+ Max.   :150.00   Max.   :7.900   Max.   :4.400   Max.   :6.900  
+  PetalWidthCm     Species         
+ Min.   :0.100   Length:150        
+ 1st Qu.:0.300   Class :character  
+ Median :1.300   Mode  :character  
+ Mean   :1.199                     
+ 3rd Qu.:1.800                     
+ Max.   :2.500                     
+\end{Soutput}
+\end{Schunk}
+
+\section{Potrzebne biblioteki użyte w projekcie}
+\begin{Schunk}
+\begin{Sinput}
+> library(ggplot2)
+> library(rstudioapi)
+> library(gridExtra)
+> library(grid)
+> library(plyr)
+> library(GGally)
+> library(plotly)
+> library(e1071)
+\end{Sinput}
+\end{Schunk}
+
+\newpage
+
+\section{Podstawowa analiza danych}
+
+W ramach podstawowej analizy danych dla każdej z czterech zmiennych (Sepal Length, Sepal Width, Petal Length, Petal Width) obliczono wartości takie jak: odchylenie standardowe, rozstęp, rozstęp kwartlowy, skośność, momenty oraz wykonano histogram.
+
+\subsection {Sepal Length}
+
+Podsumowanie:
+
+\begin{Schunk}
+\begin{Sinput}
+> summary(data$SepalLength)
+\end{Sinput}
+\begin{Soutput}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  4.300   5.100   5.800   5.843   6.400   7.900 
+\end{Soutput}
+\end{Schunk}
+Odchylenie standardowe:
+\begin{Schunk}
+\begin{Sinput}
+> sd(data$SepalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.8280661
+\end{Soutput}
+\end{Schunk}
+Rozstęp:
+\begin{Schunk}
+\begin{Sinput}
+> range(data$SepalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 4.3 7.9
+\end{Soutput}
+\end{Schunk}
+Rozstęp kwartylowy:
+\begin{Schunk}
+\begin{Sinput}
+> IQR(data$SepalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.3
+\end{Soutput}
+\end{Schunk}
+Skośność:
+\begin{Schunk}
+\begin{Sinput}
+> skewness(data$SepalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.3086407
+\end{Soutput}
+\end{Schunk}
+Momenty centralne: 
+\begin{Schunk}
+\begin{Sinput}
+> moment(data$SepalLength,0.25)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.55188
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalLength,0.5)
+\end{Sinput}
+\begin{Soutput}
+[1] 2.411318
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalLength,0.75)
+\end{Sinput}
+\begin{Soutput}
+[1] 3.75136
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalLength,1)
+\end{Sinput}
+\begin{Soutput}
+[1] 5.843333
+\end{Soutput}
+\end{Schunk}
+
+Histogram:
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=SepalLengthCm, fill=factor(Species)))+
++   geom_bar()+ 
++   scale_fill_discrete(name="Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-011}
+
+
+\subsection {SepalWidth}
+
+Podsumowanie:
+
+\begin{Schunk}
+\begin{Sinput}
+> summary(data$SepalWidth)
+\end{Sinput}
+\begin{Soutput}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  2.000   2.800   3.000   3.054   3.300   4.400 
+\end{Soutput}
+\end{Schunk}
+Odchylenie standardowe:
+\begin{Schunk}
+\begin{Sinput}
+> sd(data$SepalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.4335943
+\end{Soutput}
+\end{Schunk}
+Rozstęp:
+\begin{Schunk}
+\begin{Sinput}
+> range(data$SepalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 2.0 4.4
+\end{Soutput}
+\end{Schunk}
+Rozstęp kwartylowy:
+\begin{Schunk}
+\begin{Sinput}
+> IQR(data$SepalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.5
+\end{Soutput}
+\end{Schunk}
+Skośność:
+\begin{Schunk}
+\begin{Sinput}
+> skewness(data$SepalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.3274013
+\end{Soutput}
+\end{Schunk}
+Momenty centralne: 
+\begin{Schunk}
+\begin{Sinput}
+> moment(data$SepalWidth,0.25)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.319481
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalWidth,0.5)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.743213
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalWidth,0.75)
+\end{Sinput}
+\begin{Soutput}
+[1] 2.305896
+\end{Soutput}
+\begin{Sinput}
+> moment(data$SepalWidth,1)
+\end{Sinput}
+\begin{Soutput}
+[1] 3.054
+\end{Soutput}
+\end{Schunk}
+
+Histogram:
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=SepalWidthCm, fill=factor(Species)))+
++   geom_bar()+ 
++   scale_fill_discrete(name="Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-018}
+
+\subsection {Petal length}
+
+Podsumowanie:
+
+\begin{Schunk}
+\begin{Sinput}
+> summary(data$PetalLength)
+\end{Sinput}
+\begin{Soutput}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  1.000   1.600   4.350   3.759   5.100   6.900 
+\end{Soutput}
+\end{Schunk}
+Odchylenie standardowe:
+\begin{Schunk}
+\begin{Sinput}
+> sd(data$PetalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.76442
+\end{Soutput}
+\end{Schunk}
+Rozstęp:
+\begin{Schunk}
+\begin{Sinput}
+> range(data$PetalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.0 6.9
+\end{Soutput}
+\end{Schunk}
+Rozstęp kwartylowy:
+\begin{Schunk}
+\begin{Sinput}
+> IQR(data$PetalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] 3.5
+\end{Soutput}
+\end{Schunk}
+Skośność:
+\begin{Schunk}
+\begin{Sinput}
+> skewness(data$PetalLength)
+\end{Sinput}
+\begin{Soutput}
+[1] -0.2689994
+\end{Soutput}
+\end{Schunk}
+Momenty centralne: 
+\begin{Schunk}
+\begin{Sinput}
+> moment(data$PetalLength,0.25)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.355716
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalLength,0.5)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.874027
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalLength,0.75)
+\end{Sinput}
+\begin{Soutput}
+[1] 2.634887
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalLength,1)
+\end{Sinput}
+\begin{Soutput}
+[1] 3.758667
+\end{Soutput}
+\end{Schunk}
+
+Histogram:
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=PetalLengthCm, fill=factor(Species)))+
++   geom_bar()+ 
++   scale_fill_discrete(name="Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-025}
+
+\subsection {Petal Width}
+
+Podsumowanie:
+
+\begin{Schunk}
+\begin{Sinput}
+> summary(data$PetalWidth)
+\end{Sinput}
+\begin{Soutput}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.100   0.300   1.300   1.199   1.800   2.500 
+\end{Soutput}
+\end{Schunk}
+Odchylenie standardowe:
+\begin{Schunk}
+\begin{Sinput}
+> sd(data$PetalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.7631607
+\end{Soutput}
+\end{Schunk}
+Rozstęp:
+\begin{Schunk}
+\begin{Sinput}
+> range(data$PetalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.1 2.5
+\end{Soutput}
+\end{Schunk}
+Rozstęp kwartylowy:
+\begin{Schunk}
+\begin{Sinput}
+> IQR(data$PetalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.5
+\end{Soutput}
+\end{Schunk}
+Skośność:
+\begin{Schunk}
+\begin{Sinput}
+> skewness(data$PetalWidth)
+\end{Sinput}
+\begin{Soutput}
+[1] -0.102906
+\end{Soutput}
+\end{Schunk}
+Momenty centralne: 
+\begin{Schunk}
+\begin{Sinput}
+> moment(data$PetalWidth,0.25)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.9843897
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalWidth,0.5)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.017222
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalWidth,0.75)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.08996
+\end{Soutput}
+\begin{Sinput}
+> moment(data$PetalWidth,1)
+\end{Sinput}
+\begin{Soutput}
+[1] 1.198667
+\end{Soutput}
+\end{Schunk}
+
+Histogram:
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=PetalWidthCm, fill=factor(Species)))+
++   geom_bar()+ 
++   scale_fill_discrete(name="Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-032}
+
+\newpage
+
+\section{Analiza danych przy użyciu histogramu gęstości}
+
+Uwtorzono histogramy obrazujące gęstości każdego atrybutu z zaznaczenie podziału na rodzaje irysów. Dzięki tym wykresom możemy przewidywać rozkład dla każdego parametru oraz jesteśmy w stanie zauwazyć rozdział rodzajów irysów.
+
+\subsection{Sepal Length}
+\begin{Schunk}
+\begin{Sinput}
+> DhistSl <- ggplot(data, aes(x=SepalLengthCm, colour=Species, fill=Species)) +
++   geom_density(alpha=.3) +
++   geom_vline(aes(xintercept=mean(SepalLengthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
++   xlab("Sepal Length") +  
++   ylab("Density")
+> DhistSl
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-033}
+
+\newpage
+
+\subsection{Sepal Width}
+
+\begin{Schunk}
+\begin{Sinput}
+> DhistSw <- ggplot(data, aes(x=SepalWidthCm, colour=Species, fill=Species)) +
++   geom_density(alpha=.3) +
++   geom_vline(aes(xintercept=mean(SepalWidthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
++   xlab("Sepal Width") +  
++   ylab("Density") 
+> DhistSw
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-034}
+\newpage
+\subsection{Petal Length}
+
+\begin{Schunk}
+\begin{Sinput}
+> DhistPl <- ggplot(data, aes(x=PetalLengthCm, colour=Species, fill=Species)) +
++   geom_density(alpha=.3) +
++   geom_vline(aes(xintercept=mean(PetalLengthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
++   xlab("Petal Length") +  
++   ylab("Density") 
+> DhistPl
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-035}
+\newpage
+\subsection{Petal Width}
+
+\begin{Schunk}
+\begin{Sinput}
+> DhistPw <- ggplot(data, aes(x=PetalWidthCm, colour=Species, fill=Species)) +
++   geom_density(alpha=.3) +
++   geom_vline(aes(xintercept=mean(PetalWidthCm),  colour=Species),linetype="dashed", color="grey", size=1)+
++   xlab("Petal Width") +  
++   ylab("Density") 
+> DhistPw
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-036}
+
+\subsection{Wnioski}
+Na podstawie analizy wykresów gęstości można podejrzewać, że rozkłąd zmiennej Sepal Width jest zblizony do rozkładu normalnego.
+
+\newpage
+\section{Analiza z użyciem wykresów pudełkowych}
+
+Analizę przeprowadzono w celu wykrycia wartości odstających(tzw. outliers) oraz w celu zobrazowania pokrycia się różnych klas irysów. Wykresy pudełkowe stanowią dobre narzedzie do ilustrowania różnic pomiędzy porównywanymi grupami.
+
+\subsection{Sepal Length}
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(Species, SepalLengthCm, fill=Species)) + 
++   geom_boxplot()+
++   scale_y_continuous("Sepal Length)", breaks= seq(0,30, by=.5))+
++   labs(title = "Sepal Length", x = "Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-037}
+\newpage
+
+\subsection{Sepal Width}
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(Species, SepalWidthCm, fill=Species)) + 
++   geom_boxplot()+
++   scale_y_continuous("Sepal Width)", breaks= seq(0,30, by=.5))+
++   labs(title = "Sepal Width", x = "Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-038}
+\newpage
+
+\subsection{Petal Length}
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(Species, PetalLengthCm, fill=Species)) + 
++   geom_boxplot()+
++   scale_y_continuous("Petal Length)", breaks= seq(0,30, by=.5))+
++   labs(title = "Petal Length", x = "Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-039}
+\newpage
+
+\subsection{Petal Width}
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(Species, PetalWidthCm, fill=Species)) + 
++   geom_boxplot()+
++   scale_y_continuous("Petal Width)", breaks= seq(0,30, by=.5))+
++   labs(title = "Petal Width", x = "Species")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-040}
+\subsection{Wnioski}
+
+Przy niektórych "pudełkach" można zauważyć pojedyncze wartości odstające. Dla zmiennych PetalWidth i PetalLength boxy nie pokrywają się, a dla zmiennym SepalWidth i SepalLength pokrywają się.
+
+
+\newpage
+
+\section{Analiza rodzaju rozkładu badanych cech}
+Do analizy użyto testu Shapiro-Wilk z uwagi na stosunkowo niewielki rozmiar danych. W ramach testu rozkładu wykorzystano paramentr jakim jest kurtoza. Kurtoza rozkładu normalnego wynosi 0.
+
+\subsection{Sepal Length}
+\begin{Schunk}
+\begin{Sinput}
+> kurtosis(data$SepalLengthCm)
+\end{Sinput}
+\begin{Soutput}
+[1] -0.6058125
+\end{Soutput}
+\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> shapiro.test(data$SepalLengthCm)
+\end{Sinput}
+\begin{Soutput}
+	Shapiro-Wilk normality test
+
+data:  data$SepalLengthCm
+W = 0.97609, p-value = 0.01018
+\end{Soutput}
+\end{Schunk}
+\subsubsection{Wnioski}
+Kurtoza jest ujemna, wartości cechy mniej skoncentrowane niż przy rozkładzie normalnym. p-value < 0.05, rozkład nie jest normalny.
+
+\subsection{Sepal Width}
+\begin{Schunk}
+\begin{Sinput}
+> kurtosis(data$SepalWidthCm)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.1983681
+\end{Soutput}
+\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> shapiro.test(data$SepalWidthCm)
+\end{Sinput}
+\begin{Soutput}
+	Shapiro-Wilk normality test
+
+data:  data$SepalWidthCm
+W = 0.98379, p-value = 0.07518
+\end{Soutput}
+\end{Schunk}
+
+\subsubsection{Wnioski}
+Kurtoza jest dodatnia, lecz bliska 0, wartości cechy bardziej skoncentrowane niż przy rozkładzie normalnym. p-value > 0.05, przyjmujemy hipotezę, że rozkład jest zbliżony do normalnego.
+
+\newpage
+
+\subsection{Petal Length}
+\begin{Schunk}
+\begin{Sinput}
+> kurtosis(data$PetalLengthCm)
+\end{Sinput}
+\begin{Soutput}
+[1] -1.416683
+\end{Soutput}
+\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> shapiro.test(data$PetalLengthCm)
+\end{Sinput}
+\begin{Soutput}
+	Shapiro-Wilk normality test
+
+data:  data$PetalLengthCm
+W = 0.87642, p-value = 7.545e-10
+\end{Soutput}
+\end{Schunk}
+
+\subsubsection{Wnioski}
+Kurtoza jest ujemna, wartości cechy mniej skoncentrowane niż przy rozkładzie normalnym. p-value < 0.05, rozkład nie jest normalny.
+
+\subsection{Petal Width}
+\begin{Schunk}
+\begin{Sinput}
+> kurtosis(data$PetalWidthCm)
+\end{Sinput}
+\begin{Soutput}
+[1] -1.357368
+\end{Soutput}
+\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> shapiro.test(data$PetalWidthCm)
+\end{Sinput}
+\begin{Soutput}
+	Shapiro-Wilk normality test
+
+data:  data$PetalWidthCm
+W = 0.90262, p-value = 1.865e-08
+\end{Soutput}
+\end{Schunk}
+
+\subsubsection{Wnioski}
+Kurtoza jest ujemna, wartości cechy mniej skoncentrowane niż przy rozkładzie normalnym. p-value < 0.05, rozkład nie jest normalny.
+
+\newpage
+
+\section{Korelacja}
+Macierz korelacji w datasecie:
+\begin{Schunk}
+\begin{Sinput}
+> ggpairs(data = data,
++         title = "Correlation Plot",
++         upper = list(continuous = wrap("cor", size = 5)), 
++         lower = list(continuous = "smooth")
++ )
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-049}
+\begin{Schunk}
+\begin{Sinput}
+> cor(data[, 2:5])
+\end{Sinput}
+\begin{Soutput}
+              SepalLengthCm SepalWidthCm PetalLengthCm PetalWidthCm
+SepalLengthCm     1.0000000   -0.1093692     0.8717542    0.8179536
+SepalWidthCm     -0.1093692    1.0000000    -0.4205161   -0.3565441
+PetalLengthCm     0.8717542   -0.4205161     1.0000000    0.9627571
+PetalWidthCm      0.8179536   -0.3565441     0.9627571    1.0000000
+\end{Soutput}
+\end{Schunk}
+\newpage
+Zauważam, że istnieje wysoka korelacja pomiędzy PetalWidth i PetalLength - 96\%
+
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=PetalWidthCm, y=PetalLengthCm))+
++   geom_point(aes(colour=Species))+
++   geom_smooth(method='lm')+
++   ggtitle("Correlation between Petal Length and Petal Width")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-051}
+
+\newpage
+
+Zauważam również silną korelację pomiędzy SepalLength i PetalLength - 87\%
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=SepalLengthCm, y=PetalLengthCm))+
++   geom_point(aes(colour=Species))+
++   geom_smooth(method='lm')+
++   ggtitle("Correlation between Petal Length and Sepal Length")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-052}
+\newpage
+Korelacja pomiędzy SepalLength i PetalWidth wynosi 82\%
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=SepalLengthCm, y=PetalWidthCm))+
++   geom_point(aes(colour=Species))+
++   geom_smooth(method='lm')+
++   ggtitle("Correlation between Petal Width and Sepal Length")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-053}
+\newpage
+Korelacja pomiędzy wartościami SepalLength i SepalWidth jest ujemna i wynosi -0.1. Ujemna korelacja oznacza, że wraz ze wzrostem/ spadkiem jednej zmiennej, druga zmnienna zachowuje się odwrotnie.
+\begin{Schunk}
+\begin{Sinput}
+> ggplot(data, aes(x=SepalWidthCm, y=SepalLengthCm))+
++   geom_point(aes(colour=Species))+
++   geom_smooth(method='lm')+
++   ggtitle("Correlation between Sepal Length and Sepal Width")
+\end{Sinput}
+\end{Schunk}
+\includegraphics{raport-054}
+
+
+
+
+\end{document}
+
+
